@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Part 2 — System Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0e0f0e;
+      --panel: #161714;
+      --border: #2a2d27;
+      --accent: #c8f04a;
+      --accent-dim: #8aaa2a;
+      --text: #d4d8cc;
+      --muted: #636860;
+      --warning: #f0a82a;
+      --danger: #e05a5a;
+      --info: #5ab4e0;
+      --mono: 'Share Tech Mono', monospace;
+      --display: 'Barlow Condensed', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--display);
+      min-height: 100vh;
+      padding: 48px 32px 64px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(200,240,74,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200,240,74,0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-left .eyebrow {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-left .eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(28px, 4vw, 52px);
+      font-weight: 900;
+      line-height: 0.92;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    h1 span { color: var(--accent); }
+
+    .header-right {
+      text-align: right;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      line-height: 1.8;
+    }
+
+    /* ── Main three-column layout ── */
+    .system {
+      display: grid;
+      grid-template-columns: 1fr 80px 1fr 80px 1fr;
+      gap: 0;
+      align-items: start;
+      margin-bottom: 32px;
+    }
+
+    /* ── Column cards ── */
+    .col-header {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .col-header .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .col-inputs  .col-header { color: var(--info);    border-left: 2px solid var(--info); }
+    .col-process .col-header { color: var(--accent);  border-left: 2px solid var(--accent); }
+    .col-outputs .col-header { color: var(--warning); border-left: 2px solid var(--warning); }
+
+    .col-inputs  .col-header .dot { background: var(--info); }
+    .col-process .col-header .dot { background: var(--accent); }
+    .col-outputs .col-header .dot { background: var(--warning); }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 16px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .card-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .col-inputs  .card-label { color: var(--info); }
+    .col-process .card-label { color: var(--accent-dim); }
+    .col-outputs .card-label { color: var(--warning); }
+
+    .card-title {
+      font-family: var(--display);
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .card-body {
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .card-value {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      margin-top: 6px;
+    }
+
+    /* Input column accent */
+    .col-inputs .card  { border-left: 2px solid var(--info); }
+    .col-process .card { border-left: 2px solid var(--accent); }
+    .col-outputs .card { border-left: 2px solid var(--warning); }
+
+    /* ── Arrows ── */
+    .arrow-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-top: 48px;
+      gap: 6px;
+    }
+
+    .arrow-line {
+      width: 2px;
+      height: 60px;
+      background: linear-gradient(to bottom, var(--border), var(--accent-dim));
+    }
+
+    .arrow-head {
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 10px solid var(--accent-dim);
+    }
+
+    .arrow-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+      margin-top: 8px;
+    }
+
+    /* ── Formula strip ── */
+    .formula-strip {
+      background: rgba(200,240,74,0.05);
+      border: 1px solid rgba(200,240,74,0.2);
+      border-left: 3px solid var(--accent);
+      padding: 20px 24px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .formula-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .formula {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: #fff;
+      letter-spacing: 0.05em;
+    }
+
+    .formula .var  { color: var(--info); }
+    .formula .op   { color: var(--muted); margin: 0 6px; }
+    .formula .mult { color: var(--accent); }
+    .formula .result { color: var(--warning); }
+
+    /* ── Bottom row: assumptions + uncertainty ── */
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .section-title {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .assumptions .section-title { color: var(--accent-dim); }
+    .uncertainty .section-title { color: var(--danger); }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      padding: 5px 10px;
+      border: 1px solid;
+      text-transform: uppercase;
+    }
+
+    .assumptions .tag { color: var(--accent-dim); border-color: var(--accent-dim); }
+    .uncertainty .tag { color: var(--danger);     border-color: var(--danger); }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 40px;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-align: center;
+      opacity: 0.4;
+    }
+
+    /* Animations */
+    .col-inputs  { animation: fadeUp 0.5s 0.0s ease both; }
+    .arrow-col:first-of-type { animation: fadeUp 0.5s 0.1s ease both; }
+    .col-process { animation: fadeUp 0.5s 0.2s ease both; }
+    .arrow-col:last-of-type  { animation: fadeUp 0.5s 0.3s ease both; }
+    .col-outputs { animation: fadeUp 0.5s 0.4s ease both; }
+    .formula-strip { animation: fadeUp 0.5s 0.5s ease both; }
+    .bottom-row  { animation: fadeUp 0.5s 0.6s ease both; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="header-left">
+      <div class="eyebrow">Water &amp; Wastewater Systems Reasoning — Tool 1</div>
+      <h1>Part 2: Making<span> Thinking Visible</span></h1>
+    </div>
+    <div class="header-right">
+      SUPER PIT — FIMISTON OPEN PIT<br>
+      KALGOORLIE-BOULDER, WA<br>
+      DOMESTIC WATER DEMAND MODEL
+    </div>
+  </header>
+
+  <!-- Three-column system map -->
+  <div class="system">
+
+    <!-- INPUTS -->
+    <div class="col-inputs">
+      <div class="col-header"><span class="dot"></span>Inputs</div>
+
+      <div class="card">
+        <div class="card-label">Category Input</div>
+        <div class="card-title">Drinking Water</div>
+        <div class="card-body">Direct human consumption per person per day</div>
+        <div class="card-value">Default: 3 L/person/day</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Category Input</div>
+        <div class="card-title">Sanitation</div>
+        <div class="card-body">Toilets, showers, handwashing — typically the largest category</div>
+        <div class="card-value">Default: 30 L/person/day</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Category Input</div>
+        <div class="card-title">Cooking &amp; Meals</div>
+        <div class="card-body">Food preparation, dishwashing, meal service</div>
+        <div class="card-value">Default: 10 L/person/day</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Category Input</div>
+        <div class="card-title">Other Domestic</div>
+        <div class="card-body">Laundry, cleaning, miscellaneous</div>
+        <div class="card-value">Default: 7 L/person/day</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Environmental Input</div>
+        <div class="card-title">Ambient Temperature</div>
+        <div class="card-body">Higher temperatures increase demand via a tiered multiplier</div>
+        <div class="card-value">&lt;25°C: ×1.0 &nbsp;|&nbsp; 25–35°C: ×1.10<br>35–45°C: ×1.25 &nbsp;|&nbsp; &gt;45°C: ×1.40</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Chart Control</div>
+        <div class="card-title">Max Population</div>
+        <div class="card-body">Sets the upper bound of the population axis — not a fixed input, allows scenario exploration</div>
+        <div class="card-value">User-defined range (e.g. 0–1,000)</div>
+      </div>
+    </div>
+
+    <!-- ARROW 1 -->
+    <div class="arrow-col">
+      <div class="arrow-line"></div>
+      <div class="arrow-head"></div>
+      <div class="arrow-label">summed &amp; scaled</div>
+    </div>
+
+    <!-- PROCESS -->
+    <div class="col-process">
+      <div class="col-header"><span class="dot"></span>Relationships &amp; Calculations</div>
+
+      <div class="card">
+        <div class="card-label">Step 1 — Summation</div>
+        <div class="card-title">Baseline Per-Person Use</div>
+        <div class="card-body">All four category inputs are summed to produce total daily water use per person before temperature adjustment</div>
+        <div class="card-value">Drinking + Sanitation + Cooking + Other</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Step 2 — Temperature Scaling</div>
+        <div class="card-title">Heat Adjustment Multiplier</div>
+        <div class="card-body">A tiered multiplier is applied based on ambient temperature. Hot conditions increase per-person demand, reflecting physiological need and evaporative loss</div>
+        <div class="card-value">Adjusted = Baseline × Temp. Multiplier</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Step 3 — Population Scaling</div>
+        <div class="card-title">Site-Wide Demand</div>
+        <div class="card-body">Adjusted per-person use is multiplied across the full population range. Demand scales linearly — a key assumption of the model</div>
+        <div class="card-value">Total = Adjusted Per-Person × N People</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Step 4 — Time Scaling</div>
+        <div class="card-title">Weekly &amp; Monthly Projections</div>
+        <div class="card-body">Daily totals are extended to weekly (×7) and monthly (×30) values to support planning decisions</div>
+        <div class="card-value">Weekly = Daily × 7 &nbsp;|&nbsp; Monthly = Daily × 30</div>
+      </div>
+    </div>
+
+    <!-- ARROW 2 -->
+    <div class="arrow-col">
+      <div class="arrow-line"></div>
+      <div class="arrow-head"></div>
+      <div class="arrow-label">produces</div>
+    </div>
+
+    <!-- OUTPUTS -->
+    <div class="col-outputs">
+      <div class="col-header"><span class="dot"></span>Outputs</div>
+
+      <div class="card">
+        <div class="card-label">Primary Output</div>
+        <div class="card-title">Per-Person Daily Demand</div>
+        <div class="card-body">Adjusted total litres required per person per day under current inputs and temperature</div>
+        <div class="card-value">Unit: L/person/day</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Extended Output</div>
+        <div class="card-title">Per-Person Weekly &amp; Monthly</div>
+        <div class="card-body">Scaled projections for medium-term planning of water storage and logistics</div>
+        <div class="card-value">Unit: L/person/week &nbsp;&amp;&nbsp; L/person/month</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Visual Output</div>
+        <div class="card-title">Demand vs. Population Chart</div>
+        <div class="card-body">A live-updating line graph showing how total site demand grows with population — slope determined by current per-person inputs</div>
+        <div class="card-value">X: People &nbsp;|&nbsp; Y: Litres/Day</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Contextual Output</div>
+        <div class="card-title">Breakdown Bar Chart</div>
+        <div class="card-body">Relative contribution of each category to per-person demand, adjusted for temperature, shown as proportional bars</div>
+        <div class="card-value">Drinking / Sanitation / Cooking / Other</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Interpretive Output</div>
+        <div class="card-title">Plain-English Summary</div>
+        <div class="card-body">Auto-generated narrative contextualising the numbers, noting scale implications and the effect of any temperature multiplier applied</div>
+        <div class="card-value">Updates live with every input change</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Formula strip -->
+  <div class="formula-strip">
+    <span class="formula-label">Core Formula</span>
+    <span class="formula">
+      <span class="result">Total Demand (L/day)</span>
+      <span class="op">=</span>
+      <span class="op">(</span>
+      <span class="var">Drinking</span>
+      <span class="op">+</span>
+      <span class="var">Sanitation</span>
+      <span class="op">+</span>
+      <span class="var">Cooking</span>
+      <span class="op">+</span>
+      <span class="var">Other</span>
+      <span class="op">)</span>
+      <span class="op">×</span>
+      <span class="mult">Temp. Multiplier</span>
+      <span class="op">×</span>
+      <span class="var">N People</span>
+    </span>
+  </div>
+
+  <!-- Assumptions + Uncertainty -->
+  <div class="bottom-row">
+
+    <div class="assumptions">
+      <div class="section-title">Simplifying Assumptions</div>
+      <div class="tag-list">
+        <span class="tag">No transit losses</span>
+        <span class="tag">Pumping always sufficient</span>
+        <span class="tag">No supply limits</span>
+        <span class="tag">Uniform per-person consumption</span>
+        <span class="tag">Demand scales linearly with population</span>
+        <span class="tag">Temperature is constant (single value)</span>
+        <span class="tag">No seasonal variation in category use</span>
+        <span class="tag">All workers on site simultaneously</span>
+      </div>
+    </div>
+
+    <div class="uncertainty">
+      <div class="section-title">Limits &amp; Uncertainties</div>
+      <div class="tag-list">
+        <span class="tag">Real per-person use varies by individual</span>
+        <span class="tag">Shift rosters reduce simultaneous occupancy</span>
+        <span class="tag">Temperature fluctuates throughout the day</span>
+        <span class="tag">Groundwater vs. piped supply reliability unknown</span>
+        <span class="tag">Category defaults are estimates, not measured</span>
+        <span class="tag">No accounting for water recycling on site</span>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>TOOL 1 — WATER &amp; WASTEWATER SYSTEMS REASONING &nbsp;|&nbsp; PART 2: MAKING THINKING VISIBLE &nbsp;|&nbsp; SUPER PIT, KALGOORLIE-BOULDER WA</footer>
+
+</div>
+</body>
+</html>
